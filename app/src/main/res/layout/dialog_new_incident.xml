@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_dark">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nueva Incidencia"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Completa la información"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:layout_below="@id/tvTitle"/>
+
+        <ImageView
+            android:id="@+id/btnClose"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#AAAAAA"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:text="Título de la incidencia *"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <EditText
+                android:id="@+id/etIncTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Ej: Accidente en M-30"
+                android:background="@drawable/bg_input"
+                android:textColor="@android:color/white"
+                android:textColorHint="#666666"
+                android:padding="12dp"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:text="Descripción detallada *"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <EditText
+                android:id="@+id/etIncDesc"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:hint="Describe la incidencia..."
+                android:background="@drawable/bg_input"
+                android:textColor="@android:color/white"
+                android:textColorHint="#666666"
+                android:padding="12dp"
+                android:gravity="top"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:text="Nivel de urgencia *"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btnLow"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Baja"
+                    android:backgroundTint="#2ECC71"
+                    android:layout_marginEnd="4dp"/>
+                <Button
+                    android:id="@+id/btnMid"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Media"
+                    android:backgroundTint="#F1C40F"
+                    android:layout_marginEnd="4dp"/>
+                <Button
+                    android:id="@+id/btnHigh"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Alta"
+                    android:backgroundTint="#E74C3C"/>
+            </LinearLayout>
+
+            <TextView
+                android:text="Ubicación *"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btnMyLocation"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Mi Ubicación"
+                    android:backgroundTint="@color/accent_blue"
+                    android:drawableLeft="@android:drawable/ic_menu_mylocation"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btnPickOnMap"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="En Mapa"
+                    android:backgroundTint="#2A3441"
+                    android:textColor="#AAAAAA"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/tvLat"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Lat: 40.4168"
+                    android:background="@drawable/bg_input"
+                    android:padding="12dp"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginEnd="8dp"/>
+                <TextView
+                    android:id="@+id/tvLon"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Lon: -3.7038"
+                    android:background="@drawable/bg_input"
+                    android:padding="12dp"
+                    android:textColor="#AAAAAA"/>
+            </LinearLayout>
+
+            <TextView
+                android:text="Fotografía de evidencia"
+                android:textColor="@color/accent_blue"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <LinearLayout
+                android:id="@+id/layoutPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:background="@drawable/bg_dashed_border"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+
+                <ImageView
+                    android:id="@+id/imgEvidencePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_menu_camera"
+                    app:tint="#666666"
+                    android:padding="40dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCancelInc"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Cancelar"
+            android:backgroundTint="@android:color/transparent"
+            android:textColor="#AAAAAA"
+            android:layout_marginEnd="12dp"/>
+
+        <Button
+            android:id="@+id/btnPublishInc"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Publicar"
+            android:backgroundTint="@color/accent_blue"/>
+    </LinearLayout>
+
+</LinearLayout>

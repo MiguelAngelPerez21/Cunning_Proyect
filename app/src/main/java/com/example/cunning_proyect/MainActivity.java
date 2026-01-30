@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("USER_EMAIL", email);
             startActivity(intent);
 
-            startActivity(new Intent(this, IncidentsActivity.class));
+            Toast.makeText(this, "Login correcto", Toast.LENGTH_SHORT).show();
             finish();
         });
     }

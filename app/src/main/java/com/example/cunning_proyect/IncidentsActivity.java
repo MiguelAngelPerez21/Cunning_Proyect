@@ -27,10 +27,7 @@ public class IncidentsActivity extends AppCompatActivity {
     private ImageView imgPreviewPlaceholder;
     private Uri selectedImageUri;
 
-    private DatabaseHelper dbHelper;
-
-
-    // Listas y Adapters
+    // Listas y Adapters (Sin base de datos)
     private ArrayList<Community> communityList = new ArrayList<>();
     private RecyclerView rvCommunities;
     private CommunityAdapter adapter;
@@ -38,16 +35,13 @@ public class IncidentsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_communities);
 
-        dbHelper = new DatabaseHelper(this);
-
-
+        // 1. Vincular vistas
         tvWelcome = findViewById(R.id.tvWelcomeUser);
         rvCommunities = findViewById(R.id.rvCommunities);
 
-
+        // 2. Configurar nombre de usuario
         String userEmail = getIntent().getStringExtra("USER_EMAIL");
         if (userEmail != null && userEmail.contains("@")) {
             tvWelcome.setText("Hola, " + userEmail.split("@")[0]);
@@ -55,22 +49,22 @@ public class IncidentsActivity extends AppCompatActivity {
             tvWelcome.setText("Hola, Usuario");
         }
 
+        // 3. Configurar RecyclerView
         rvCommunities.setLayoutManager(new LinearLayoutManager(this));
 
-        //se carga la base de datos con las comunidades
-
-        communityList = dbHelper.getAllCommunities();
-
+        // Inicializamos la lista vacía (se borrará al cerrar la app)
         adapter = new CommunityAdapter(communityList);
         rvCommunities.setAdapter(adapter);
 
-
-        rvCommunities.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new CommunityAdapter(communityList);
-        rvCommunities.setAdapter(adapter);
-
-
+        // 4. Botón flotante para abrir el diálogo
         findViewById(R.id.btnAddCommunity).setOnClickListener(v -> showNewCommunityDialog());
+
+        // 5. Lógica del Botón SALIR (Logout)
+        findViewById(R.id.btnLogout).setOnClickListener(v -> {
+            Intent intent = new Intent(IncidentsActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
     }
 
     // Launcher para la galería
@@ -96,45 +90,37 @@ public class IncidentsActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-
+        // Vincular elementos del diálogo
         EditText etName = dialog.findViewById(R.id.etNewCommName);
-        EditText etDesc = dialog.findViewById(R.id.etNewCommDesc); // <--- ¡ESTA LÍNEA FALTABA!
+        EditText etDesc = dialog.findViewById(R.id.etNewCommDesc); // <--- Aquí corregimos el error de antes
+
         Button btnGallery = dialog.findViewById(R.id.btnSelectImage);
         Button btnCreate = dialog.findViewById(R.id.btnCreate);
         imgPreviewPlaceholder = dialog.findViewById(R.id.imgPreview);
 
-
         selectedImageUri = null;
-
 
         btnGallery.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             galleryLauncher.launch(intent);
         });
 
-
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
+            // Obtenemos la descripción correctamente
             String desc = etDesc.getText().toString().trim();
 
             if (!name.isEmpty()) {
                 String imagePath = (selectedImageUri != null) ? selectedImageUri.toString() : "";
                 if (desc.isEmpty()) desc = "Zona sin descripción";
 
-                // GUARDAR EN BASE DE DATOS
-                boolean success = dbHelper.addCommunity(name, desc, imagePath);
+                // Añadimos directamente a la lista visual (Solo memoria RAM)
+                communityList.add(new Community(name, desc, imagePath));
 
-                if (success) {
-                    // ACTUALIZAR LA LISTA VISUAL
-                    communityList.add(new Community(name, desc, imagePath));
-                    adapter.notifyItemInserted(communityList.size() - 1);
-                    rvCommunities.scrollToPosition(communityList.size() - 1);
+                adapter.notifyItemInserted(communityList.size() - 1);
+                rvCommunities.scrollToPosition(communityList.size() - 1);
 
-                    Toast.makeText(this, "Comunidad guardada", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                } else {
-                    Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show();
-                }
+                dialog.dismiss();
             } else {
                 etName.setError("Escribe un nombre");
             }

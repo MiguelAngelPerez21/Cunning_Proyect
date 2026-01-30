@@ -1,5 +1,6 @@
 package com.example.cunning_proyect;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +43,12 @@ public class CommunityAdapter extends RecyclerView.Adapter<CommunityAdapter.View
 
         holder.itemView.setOnClickListener(v -> {
 
+        });
+        // En CommunityAdapter.java, dentro de onBindViewHolder
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), CommunityDetailActivity.class);
+            intent.putExtra("COMMUNITY_NAME", community.getName());
+            v.getContext().startActivity(intent);
         });
     }
 
