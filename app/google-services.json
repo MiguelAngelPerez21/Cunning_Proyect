@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1092636570454",
+    "project_id": "cunning-53382",
+    "storage_bucket": "cunning-53382.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092636570454:android:1267f885d9763c51141cf7",
+        "android_client_info": {
+          "package_name": "com.example.cunning_proyect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXVSKevkg2cMc_6QB8QMquw9tKmMiQV9Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
