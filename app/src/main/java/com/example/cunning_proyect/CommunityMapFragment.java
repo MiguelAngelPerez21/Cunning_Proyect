@@ -36,48 +36,44 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class CommunityMapFragment extends Fragment {
 
     private GoogleMap mMap;
 
-    // Variables temporales para el formulario
+    // Variables temporales
     private Dialog creationDialog;
     private int selectedUrgency = 2; // 1=Baja, 2=Media, 3=Alta
     private LatLng selectedLocation = null;
     private Bitmap selectedBitmap = null;
-    private boolean isPickingLocation = false; // Controla si estamos eligiendo punto en el mapa
+    private boolean isPickingLocation = false;
 
-    // Vista previa de imagen en el formulario
     private ImageView imgEvidencePreview;
 
-    // Clase simple para guardar datos de la incidencia dentro del marcador
+    // --- CLASE DE DATOS ACTUALIZADA CON VOTOS ---
     private static class IncidentData {
         String title, desc;
         int urgency;
         Bitmap image;
+        int votesUp = 0;   // Votos positivos
+        int votesDown = 0; // Votos negativos
 
         IncidentData(String t, String d, int u, Bitmap i) {
             title = t; desc = d; urgency = u; image = i;
         }
     }
 
-    // 1. Launcher Galería
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == -1 && result.getData() != null) {
                     Uri imageUri = result.getData().getData();
-                    if(imgEvidencePreview != null) {
-                        imgEvidencePreview.setImageURI(imageUri);
-                        // Nota: Para guardarlo bien deberías convertir Uri a Bitmap,
-                        // pero visualmente esto ya funciona.
-                    }
+                    if(imgEvidencePreview != null) imgEvidencePreview.setImageURI(imageUri);
                 }
             }
     );
 
-    // 2. Launcher Cámara
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -91,7 +87,6 @@ public class CommunityMapFragment extends Fragment {
             }
     );
 
-    // 3. Launcher Permiso Cámara
     private final ActivityResultLauncher<String> requestCameraPermission = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             isGranted -> {
@@ -113,9 +108,8 @@ public class CommunityMapFragment extends Fragment {
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) mapFragment.getMapAsync(callback);
 
-        // Botón azul grande "Reportar Incidencia"
         view.findViewById(R.id.btnReportIncident).setOnClickListener(v -> {
-            selectedUrgency = 2; // Reiniciar a Media
+            selectedUrgency = 2;
             if (mMap != null) selectedLocation = mMap.getCameraPosition().target;
             selectedBitmap = null;
             showIncidentDialog();
@@ -129,47 +123,37 @@ public class CommunityMapFragment extends Fragment {
             LatLng madrid = new LatLng(40.416775, -3.703790);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(madrid, 12));
 
-            // CLICK EN EL MAPA (Para seleccionar ubicación)
             mMap.setOnMapClickListener(latLng -> {
                 if (isPickingLocation) {
                     selectedLocation = latLng;
                     isPickingLocation = false;
-                    creationDialog.show(); // Volvemos a mostrar el diálogo
+                    creationDialog.show();
                     updateCoordinatesText(creationDialog);
                 }
             });
 
-            // CLICK EN UN MARCADOR (Ver detalles)
             mMap.setOnMarkerClickListener(marker -> {
                 Object tag = marker.getTag();
-                if (tag instanceof IncidentData) {
-                    showDetailDialog((IncidentData) tag);
-                }
+                if (tag instanceof IncidentData) showDetailSheet((IncidentData) tag); // CAMBIO AQUÍ
                 return true;
             });
         }
     };
 
-    // --- LÓGICA DEL FORMULARIO DE CREACIÓN ---
     private void showIncidentDialog() {
         if (creationDialog == null) {
             creationDialog = new Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             creationDialog.setContentView(R.layout.dialog_new_incident);
         }
 
-        // Elementos UI
         Button btnLow = creationDialog.findViewById(R.id.btnLow);
         Button btnMid = creationDialog.findViewById(R.id.btnMid);
         Button btnHigh = creationDialog.findViewById(R.id.btnHigh);
-
-        // CORREGIDO: Usamos el ID correcto que pusimos en el XML anterior
         Button btnPickOnMap = creationDialog.findViewById(R.id.btnPickOnMap);
 
-        // 1. Gestión de Urgencia (Visual)
         View.OnClickListener urgencyListener = v -> {
             btnLow.setAlpha(0.5f); btnMid.setAlpha(0.5f); btnHigh.setAlpha(0.5f);
             v.setAlpha(1.0f);
-
             if (v == btnLow) selectedUrgency = 1;
             else if (v == btnMid) selectedUrgency = 2;
             else selectedUrgency = 3;
@@ -177,44 +161,32 @@ public class CommunityMapFragment extends Fragment {
         btnLow.setOnClickListener(urgencyListener);
         btnMid.setOnClickListener(urgencyListener);
         btnHigh.setOnClickListener(urgencyListener);
-
-        // Seleccionar Media por defecto
         btnMid.performClick();
 
-        // 2. Gestión de Ubicación "En Mapa"
         if (btnPickOnMap != null) {
             btnPickOnMap.setOnClickListener(v -> {
                 isPickingLocation = true;
-                creationDialog.hide(); // Ocultamos temporalmente para ver el mapa
+                creationDialog.hide();
                 Toast.makeText(getContext(), "Toca el lugar exacto en el mapa", Toast.LENGTH_LONG).show();
             });
         }
 
-        // 3. Gestión de Foto
         imgEvidencePreview = creationDialog.findViewById(R.id.imgEvidencePreview);
         LinearLayout layoutPhoto = creationDialog.findViewById(R.id.layoutPhoto);
+        if (layoutPhoto != null) layoutPhoto.setOnClickListener(v -> showPhotoOptions());
 
-        if (layoutPhoto != null) {
-            layoutPhoto.setOnClickListener(v -> showPhotoOptions());
-        }
-
-        // 4. Publicar
         Button btnPublish = creationDialog.findViewById(R.id.btnPublishInc);
         btnPublish.setOnClickListener(v -> {
             EditText etTitle = creationDialog.findViewById(R.id.etIncTitle);
             EditText etDesc = creationDialog.findViewById(R.id.etIncDesc);
-
             String title = etTitle.getText().toString();
             if(title.isEmpty()) { etTitle.setError("Requerido"); return; }
 
-            // Añadir al mapa
             addMarkerToMap(title, etDesc.getText().toString(), selectedUrgency, selectedLocation);
-
             creationDialog.dismiss();
-            creationDialog = null; // Limpiar
+            creationDialog = null;
         });
 
-        // Botones de Cerrar
         creationDialog.findViewById(R.id.btnClose).setOnClickListener(v -> creationDialog.dismiss());
         creationDialog.findViewById(R.id.btnCancelInc).setOnClickListener(v -> creationDialog.dismiss());
 
@@ -238,17 +210,13 @@ public class CommunityMapFragment extends Fragment {
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
                         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
-                                == PackageManager.PERMISSION_GRANTED) {
-                            openCamera();
-                        } else {
-                            requestCameraPermission.launch(Manifest.permission.CAMERA);
-                        }
+                                == PackageManager.PERMISSION_GRANTED) openCamera();
+                        else requestCameraPermission.launch(Manifest.permission.CAMERA);
                     } else {
                         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                         galleryLauncher.launch(intent);
                     }
-                })
-                .show();
+                }).show();
     }
 
     private void openCamera() {
@@ -258,7 +226,6 @@ public class CommunityMapFragment extends Fragment {
 
     private void addMarkerToMap(String title, String desc, int urgency, LatLng loc) {
         if (loc == null) return;
-
         float hue;
         if (urgency == 1) hue = BitmapDescriptorFactory.HUE_GREEN;
         else if (urgency == 2) hue = BitmapDescriptorFactory.HUE_ORANGE;
@@ -269,35 +236,43 @@ public class CommunityMapFragment extends Fragment {
                 .title(title)
                 .icon(BitmapDescriptorFactory.defaultMarker(hue)));
 
-        if (marker != null) {
-            marker.setTag(new IncidentData(title, desc, urgency, selectedBitmap));
-        }
+        if (marker != null) marker.setTag(new IncidentData(title, desc, urgency, selectedBitmap));
     }
 
-    private void showDetailDialog(IncidentData data) {
-        Dialog d = new Dialog(getContext());
-        d.setContentView(R.layout.dialog_incident_detail);
-        if (d.getWindow() != null) d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    // --- NUEVO MÉTODO CON BOTTOM SHEET Y VOTACIÓN ---
+    private void showDetailSheet(IncidentData data) {
+        BottomSheetDialog sheet = new BottomSheetDialog(requireContext());
+        sheet.setContentView(R.layout.dialog_incident_detail);
 
-        TextView t = d.findViewById(R.id.tvDetailTitle);
-        TextView desc = d.findViewById(R.id.tvDetailDesc);
-        TextView urg = d.findViewById(R.id.tvDetailUrgency);
-        ImageView img = d.findViewById(R.id.imgDetailEvidence);
+        TextView t = sheet.findViewById(R.id.tvDetailTitle);
+        TextView desc = sheet.findViewById(R.id.tvDetailDesc);
+        TextView urg = sheet.findViewById(R.id.tvDetailUrgency);
+        ImageView img = sheet.findViewById(R.id.imgDetailEvidence);
 
+        // Contadores de votos
+        TextView tvUp = sheet.findViewById(R.id.tvVoteUpCount);
+        TextView tvDown = sheet.findViewById(R.id.tvVoteDownCount);
+        View btnUp = sheet.findViewById(R.id.btnVoteUp);
+        View btnDown = sheet.findViewById(R.id.btnVoteDown);
+
+        // Setear textos
         t.setText(data.title);
         desc.setText(data.desc);
 
+        // Actualizar contadores iniciales
+        tvUp.setText("👍 Sí (" + data.votesUp + ")");
+        tvDown.setText("👎 No (" + data.votesDown + ")");
+
+        // Colores de urgencia
         if (data.urgency == 1) {
-            urg.setText("Urgencia BAJA");
-            urg.setBackgroundColor(Color.parseColor("#2ECC71"));
+            urg.setText("URGENCIA BAJA"); urg.setBackgroundResource(R.drawable.bg_urgency_low);
         } else if (data.urgency == 2) {
-            urg.setText("Urgencia MEDIA");
-            urg.setBackgroundColor(Color.parseColor("#F1C40F"));
+            urg.setText("URGENCIA MEDIA"); urg.setBackgroundResource(R.drawable.bg_urgency_medium);
         } else {
-            urg.setText("Urgencia ALTA");
-            urg.setBackgroundColor(Color.parseColor("#E74C3C"));
+            urg.setText("URGENCIA ALTA"); urg.setBackgroundResource(R.drawable.bg_urgency_high);
         }
 
+        // Mostrar imagen si existe
         if (data.image != null) {
             img.setImageBitmap(data.image);
             img.setVisibility(View.VISIBLE);
@@ -305,7 +280,20 @@ public class CommunityMapFragment extends Fragment {
             img.setVisibility(View.GONE);
         }
 
-        d.findViewById(R.id.btnCloseDetail).setOnClickListener(v -> d.dismiss());
-        d.show();
+        // --- LÓGICA DE VOTACIÓN ---
+        btnUp.setOnClickListener(v -> {
+            data.votesUp++; // Aumentar contador
+            tvUp.setText("👍 Sí (" + data.votesUp + ")");
+            Toast.makeText(getContext(), "¡Gracias por confirmar!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnDown.setOnClickListener(v -> {
+            data.votesDown++; // Aumentar contador negativo
+            tvDown.setText("👎 No (" + data.votesDown + ")");
+            Toast.makeText(getContext(), "Reporte de incidencia inexistente enviado", Toast.LENGTH_SHORT).show();
+        });
+
+        sheet.findViewById(R.id.btnCloseDetail).setOnClickListener(v -> sheet.dismiss());
+        sheet.show();
     }
 }
