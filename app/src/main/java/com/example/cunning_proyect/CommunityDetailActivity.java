@@ -9,14 +9,19 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class CommunityDetailActivity extends AppCompatActivity {
 
     private String communityName;
+    private double commLat;
+    private double commLon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_community_detail);
 
-        // Recibir el nombre de la comunidad
+        // 1. RECIBIMOS LOS DATOS
         communityName = getIntent().getStringExtra("COMMUNITY_NAME");
+        commLat = getIntent().getDoubleExtra("COMM_LAT", 40.4168);
+        commLon = getIntent().getDoubleExtra("COMM_LON", -3.7038);
+
         TextView tvHeader = findViewById(R.id.tvHeaderName);
         tvHeader.setText(communityName);
 
@@ -27,14 +32,16 @@ public class CommunityDetailActivity extends AppCompatActivity {
 
             if (itemId == R.id.nav_map) {
                 selectedFragment = new CommunityMapFragment();
-            } else if (itemId == R.id.nav_chat) { // Ya no hay "else if info"
+            } else if (itemId == R.id.nav_chat) {
                 selectedFragment = new CommunityChatFragment();
             }
 
             if (selectedFragment != null) {
-                // Pasar el nombre de la comunidad al fragmento
+                // Preparamos el paquete de datos para el fragmento
                 Bundle args = new Bundle();
                 args.putString("COMM_NAME", communityName);
+                args.putDouble("ARG_LAT", commLat);
+                args.putDouble("ARG_LON", commLon);
                 selectedFragment.setArguments(args);
 
                 getSupportFragmentManager().beginTransaction()
@@ -44,9 +51,18 @@ public class CommunityDetailActivity extends AppCompatActivity {
             return true;
         });
 
-        // Cargar el mapa por defecto al abrir
+        // Carga inicial del mapa
         if (savedInstanceState == null) {
-            bottomNav.setSelectedItemId(R.id.nav_map);
+            Fragment mapFragment = new CommunityMapFragment();
+            Bundle args = new Bundle();
+            args.putString("COMM_NAME", communityName);
+            args.putDouble("ARG_LAT", commLat);
+            args.putDouble("ARG_LON", commLon);
+            mapFragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, mapFragment)
+                    .commit();
         }
     }
 }

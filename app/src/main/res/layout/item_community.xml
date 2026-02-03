@@ -1,51 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="200dp"
-    android:layout_margin="12dp"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="10dp"
     app:cardCornerRadius="16dp"
-    app:cardBackgroundColor="#0E1625">
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="#2A3441">
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
-            android:id="@+id/imgCommunityBackground"
+            android:id="@+id/imgCommIcon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@drawable/madrid_placeholder" />
+            android:src="@android:drawable/ic_menu_gallery" />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#80000000" />
+            android:layout_height="0dp"
+            android:background="#99000000"
+            app:layout_constraintHeight_percent="0.4"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <TextView
-                android:id="@+id/tvCommunityName"
+                android:id="@+id/tvCommName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Madrid Centro"
+                android:text="Nombre Comunidad"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:shadowColor="#000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="4"/>
 
             <TextView
-                android:id="@+id/tvCommunityDesc"
+                android:id="@+id/tvCommDesc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Incidencias en el centro..."
-                android:textColor="#AAAAAA" />
+                android:text="Descripción..."
+                android:textColor="#DDDDDD"
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end"/>
         </LinearLayout>
-    </RelativeLayout>
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_media_play"
+            app:tint="@android:color/white"
+            android:layout_margin="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

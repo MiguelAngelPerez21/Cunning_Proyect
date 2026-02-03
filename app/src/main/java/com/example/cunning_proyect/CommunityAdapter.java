@@ -13,59 +13,54 @@ import java.util.ArrayList;
 
 public class CommunityAdapter extends RecyclerView.Adapter<CommunityAdapter.ViewHolder> {
 
-    private ArrayList<Community> communityList;
+    private ArrayList<Community> list;
 
-    public CommunityAdapter(ArrayList<Community> communityList) {
-        this.communityList = communityList;
+    public CommunityAdapter(ArrayList<Community> list) {
+        this.list = list;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
+        // Inflamos el diseño corregido (item_community)
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_community, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Community community = communityList.get(position);
+        Community community = list.get(position);
         holder.tvName.setText(community.getName());
         holder.tvDesc.setText(community.getDescription());
 
-
-        if (!community.getImageUri().isEmpty()) {
-            holder.imgBg.setImageURI(Uri.parse(community.getImageUri()));
+        if (community.getImageUri() != null && !community.getImageUri().isEmpty()) {
+            holder.imgIcon.setImageURI(Uri.parse(community.getImageUri()));
         } else {
-            holder.imgBg.setImageResource(R.drawable.madrid_placeholder); // si falla se pone la imagen generica (o si no hay imagen)
+            holder.imgIcon.setImageResource(android.R.drawable.ic_menu_myplaces);
         }
 
-
-        holder.itemView.setOnClickListener(v -> {
-
-        });
-        // En CommunityAdapter.java, dentro de onBindViewHolder
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), CommunityDetailActivity.class);
             intent.putExtra("COMMUNITY_NAME", community.getName());
+            intent.putExtra("COMM_LAT", community.getLatitude());
+            intent.putExtra("COMM_LON", community.getLongitude());
             v.getContext().startActivity(intent);
         });
     }
 
     @Override
-    public int getItemCount() {
-        return communityList.size();
-    }
+    public int getItemCount() { return list.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvDesc;
-        ImageView imgBg;
+        ImageView imgIcon;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvCommunityName);
-            tvDesc = itemView.findViewById(R.id.tvCommunityDesc);
-            imgBg = itemView.findViewById(R.id.imgCommunityBackground);
+            // Vinculamos con los IDs del XML item_community.xml
+            tvName = itemView.findViewById(R.id.tvCommName);
+            tvDesc = itemView.findViewById(R.id.tvCommDesc);
+            imgIcon = itemView.findViewById(R.id.imgCommIcon);
         }
     }
 }

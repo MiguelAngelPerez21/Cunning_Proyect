@@ -1,17 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
+    // Plugin de Google Services activado
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.cunning_proyect"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 35 // Subimos a 35 (Estable Android 15)
 
     defaultConfig {
         applicationId = "com.example.cunning_proyect"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35 // Coincide con compileSdk
         versionCode = 1
         versionName = "1.0"
 
@@ -28,27 +28,45 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(libs.activity)
-    implementation(libs.constraintlayout)
+    // --- LIBRERÍAS NÚCLEO (Versiones forzadas para evitar error de SDK 36) ---
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.9.0") // Esta es la que daba error, la bajamos a la estable
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
-    //Añadimos estas dependencias (comprobar)
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    // --- TUS DEPENDENCIAS EXTRAS ---
+
+    // Mapas
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // Imagen Circular
     implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // Navegación
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
-    implementation("com.google.android.material:material:1.11.0")
+
+    // Recycler View (Para las listas)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // --- FIREBASE (Hito 3) ---
+    // Importar la BOM (gestiona las versiones automáticamente)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+
+    // Librerías de Firebase (sin poner versión, la BOM lo gestiona)
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")      // Login
+    implementation("com.google.firebase:firebase-firestore") // Base de Datos
 }
