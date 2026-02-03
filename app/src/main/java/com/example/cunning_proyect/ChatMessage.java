@@ -1,14 +1,14 @@
 package com.example.cunning_proyect;
 
 public class ChatMessage {
-    private String message;
-    private String senderName;
-    // En el futuro añadiremos timestamp, etc.
+    String text;
+    boolean isUser; // true = usuario (derecha), false = bot (izquierda)
 
-    public ChatMessage(String message, String senderName) {
-        this.message = message;
-        this.senderName = senderName;
+    public ChatMessage(String text, boolean isUser) {
+        this.text = text;
+        this.isUser = isUser;
     }
-    public String getMessage() { return message; }
-    public String getSenderName() { return senderName; }
+
+    public String getText() { return text; }
+    public boolean isUser() { return isUser; }
 }

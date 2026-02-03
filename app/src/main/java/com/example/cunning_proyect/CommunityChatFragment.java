@@ -36,14 +36,16 @@ public class CommunityChatFragment extends Fragment {
         rvChat.setAdapter(chatAdapter);
 
         // Mensaje de prueba
-        chatMessages.add(new ChatMessage("¡Bienvenido al chat de la comunidad!", "Sistema"));
+        // Usa 'false' para indicar que NO es el usuario (es el sistema/bot)
+        chatMessages.add(new ChatMessage("¡Bienvenido al chat...!", false));
         chatAdapter.notifyDataSetChanged();
 
         btnSend.setOnClickListener(v -> {
             String messageText = etMessage.getText().toString().trim();
             if (!messageText.isEmpty()) {
                 // Por ahora el usuario es "Yo", luego será el real
-                chatMessages.add(new ChatMessage(messageText, "Yo"));
+                // Ponemos 'true' para indicar que el mensaje lo envía el Usuario
+                chatMessages.add(new ChatMessage(messageText, true));
                 chatAdapter.notifyItemInserted(chatMessages.size() - 1);
                 rvChat.scrollToPosition(chatMessages.size() - 1);
                 etMessage.setText(""); // Limpiar el input
