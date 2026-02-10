@@ -22,7 +22,7 @@ public class OpenAIService {
     private static final String GOOGLE_API_KEY = "AIzaSyA1y8K-PUJPlBhcFC6jqOblBmX8cGQ3gXU";
 
     // Usamos v1beta, que es la casa nativa del modelo Flash.
-    private static final String URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GOOGLE_API_KEY;
+    private static final String URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + GOOGLE_API_KEY;
 
     private final OkHttpClient client;
 
