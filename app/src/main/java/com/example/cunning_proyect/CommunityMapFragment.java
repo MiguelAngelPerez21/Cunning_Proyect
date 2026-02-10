@@ -3,18 +3,14 @@ package com.example.cunning_proyect;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,54 +37,51 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CommunityMapFragment extends Fragment {
 
     private GoogleMap mMap;
     private Dialog creationDialog;
-    private DatabaseHelper db; // Base de Datos
+    private FirebaseHelper firebaseHelper;
+    private FirebaseFirestore db;
 
-    // Variables temporales formulario
+    // Datos de la comunidad actual (Recibidos al hacer clic en la lista)
+    private String commId;
+    private String commCreatorId;
+    private String commName;
+
+    // Variables para crear incidencias
     private int selectedUrgency = 2;
     private LatLng selectedLocation = null;
-    private Bitmap selectedBitmap = null;
+    private Uri selectedUri = null;
     private boolean isPickingLocation = false;
     private ImageView imgEvidencePreview;
-    private String currentCommunityName = "Unknown";
 
-    // --- REQUISITO PSP: HILOS EN SEGUNDO PLANO ---
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
-    // Modelo de datos interno para el marcador
+    // Modelo interno para los marcadores
     private static class IncidentData {
         String title, desc;
         int urgency;
-        Bitmap image; // Para mostrar en RAM
-        String imagePath; // Ruta en disco (BD)
-        int votesUp = 0;
-        int votesDown = 0;
-
-        IncidentData(String t, String d, int u, Bitmap i, String path) {
-            title = t; desc = d; urgency = u; image = i; imagePath = path;
+        String imageUriLocal;
+        IncidentData(String t, String d, int u, String uri) {
+            title = t; desc = d; urgency = u; imageUriLocal = uri;
         }
     }
 
+    // --- LAUNCHERS PARA FOTOS (Cámara y Galería) ---
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == -1 && result.getData() != null) {
-                    if(imgEvidencePreview != null) imgEvidencePreview.setImageURI(result.getData().getData());
-                    // Convertir URI a Bitmap para poder guardarlo luego
-                    try {
-                        selectedBitmap = MediaStore.Images.Media.getBitmap(requireContext().getContentResolver(), result.getData().getData());
-                    } catch (IOException e) { e.printStackTrace(); }
+                    selectedUri = result.getData().getData();
+                    if(imgEvidencePreview != null) imgEvidencePreview.setImageURI(selectedUri);
                 }
             }
     );
@@ -99,8 +92,9 @@ public class CommunityMapFragment extends Fragment {
                 if (result.getResultCode() == -1 && result.getData() != null) {
                     Bundle extras = result.getData().getExtras();
                     if (extras != null) {
-                        selectedBitmap = (Bitmap) extras.get("data");
-                        if(imgEvidencePreview != null) imgEvidencePreview.setImageBitmap(selectedBitmap);
+                        Bitmap bmp = (Bitmap) extras.get("data");
+                        if(imgEvidencePreview != null) imgEvidencePreview.setImageBitmap(bmp);
+                        selectedUri = saveBitmapLocally(requireContext(), bmp);
                     }
                 }
             }
@@ -108,14 +102,13 @@ public class CommunityMapFragment extends Fragment {
 
     private final ActivityResultLauncher<String> requestCameraPermission = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (isGranted) openCamera();
-            }
+            isGranted -> { if (isGranted) openCamera(); }
     );
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Asegúrate de usar el XML que tiene la papelera (el que te pasé antes)
         return inflater.inflate(R.layout.fragment_community_map, container, false);
     }
 
@@ -123,41 +116,62 @@ public class CommunityMapFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Inicializar BD
-        db = new DatabaseHelper(requireContext());
+        firebaseHelper = new FirebaseHelper();
+        db = FirebaseFirestore.getInstance();
 
-        // Obtener nombre de la comunidad actual
+        // 1. RECUPERAR DATOS DE LA COMUNIDAD (Pasados desde el Adapter)
         if (getArguments() != null) {
-            currentCommunityName = getArguments().getString("COMM_NAME", "Unknown");
+            commId = getArguments().getString("COMM_ID");
+            commCreatorId = getArguments().getString("COMM_CREATOR");
+            commName = getArguments().getString("COMM_NAME");
         }
 
+        // 2. CONFIGURAR EL BOTÓN DE BORRAR (PAPELERA)
+        FloatingActionButton btnDelete = view.findViewById(R.id.btnDeleteCommunity);
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ?
+                FirebaseAuth.getInstance().getCurrentUser().getUid() : "anonimo";
+
+        // 🔥 LÓGICA CLAVE: SOLO EL CREADOR VE LA PAPELERA 🔥
+        if (commCreatorId != null && commCreatorId.equals(currentUserId)) {
+            btnDelete.setVisibility(View.VISIBLE);
+            btnDelete.setOnClickListener(v -> confirmDeleteCommunity());
+        } else {
+            btnDelete.setVisibility(View.GONE);
+        }
+
+        // 3. INICIALIZAR EL MAPA
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) mapFragment.getMapAsync(callback);
 
+        // Botón de crear incidencia (+)
         view.findViewById(R.id.btnReportIncident).setOnClickListener(v -> {
             selectedUrgency = 2;
             if (mMap != null) selectedLocation = mMap.getCameraPosition().target;
-            selectedBitmap = null;
+            selectedUri = null;
             showIncidentDialog();
         });
     }
 
+    // --- LOGICA DEL MAPA ---
     private final OnMapReadyCallback callback = new OnMapReadyCallback() {
         @Override
         public void onMapReady(@NonNull GoogleMap googleMap) {
             mMap = googleMap;
 
-            // Centrar mapa en la comunidad
-            double lat = 40.4168;
-            double lon = -3.7038;
+            // Centrar mapa en la comunidad seleccionada (si hay coordenadas)
             if (getArguments() != null) {
-                lat = getArguments().getDouble("ARG_LAT", 40.4168);
-                lon = getArguments().getDouble("ARG_LON", -3.7038);
+                double lat = getArguments().getDouble("COMM_LAT", 0);
+                double lon = getArguments().getDouble("COMM_LON", 0);
+                if (lat != 0 && lon != 0) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 15));
+                } else {
+                    // Si no tiene coordenadas, vamos a Madrid
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.4168, -3.7038), 6));
+                }
             }
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 15));
 
-            // CARGAR INCIDENCIAS DE LA BD (PMDM)
-            loadIncidentsFromDB();
+            // Cargar incidencias (Pines en el mapa)
+            loadIncidentsFromFirebase();
 
             mMap.setOnMapClickListener(latLng -> {
                 if (isPickingLocation) {
@@ -176,49 +190,61 @@ public class CommunityMapFragment extends Fragment {
         }
     };
 
-    // --- CARGAR DATOS DE SQLITE ---
-    private void loadIncidentsFromDB() {
-        Cursor cursor = db.getIncidentsForCommunity(currentCommunityName);
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                // Leer datos de la columna (ajusta índices según tu DatabaseHelper)
-                // Orden en CREATE: id, title, description, urgency, latitude, longitude, imageUri, communityName...
-                String title = cursor.getString(1);
-                String desc = cursor.getString(2);
-                int urgency = cursor.getInt(3);
-                double lat = cursor.getDouble(4);
-                double lon = cursor.getDouble(5);
-                String imgPath = cursor.getString(6);
+    // --- CARGAR INCIDENCIAS DE FIREBASE ---
+    private void loadIncidentsFromFirebase() {
+        db.collection("incidencias").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    mMap.clear();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        try {
+                            String title = doc.getString("titulo");
+                            String desc = doc.getString("descripcion");
+                            Double lat = doc.getDouble("latitud");
+                            Double lon = doc.getDouble("longitud");
+                            String photoUrl = doc.getString("fotoUrl");
+                            int urgency = 2; // Por defecto
 
-                // Cargar imagen de disco si existe
-                Bitmap bmp = null;
-                if (imgPath != null && !imgPath.isEmpty()) {
-                    File imgFile = new File(imgPath);
-                    if(imgFile.exists()){
-                        bmp = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                            if (lat != null && lon != null) {
+                                Marker m = mMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(lat, lon))
+                                        .title(title)
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+
+                                if (m != null) {
+                                    m.setTag(new IncidentData(title, desc, urgency, photoUrl));
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e("MAP", "Error loading marker: " + e.getMessage());
+                        }
                     }
-                }
-
-                // Añadir al mapa
-                LatLng loc = new LatLng(lat, lon);
-                float hue = BitmapDescriptorFactory.HUE_ORANGE;
-                if(urgency == 1) hue = BitmapDescriptorFactory.HUE_GREEN;
-                if(urgency == 3) hue = BitmapDescriptorFactory.HUE_RED;
-
-                Marker m = mMap.addMarker(new MarkerOptions()
-                        .position(loc)
-                        .title(title)
-                        .icon(BitmapDescriptorFactory.defaultMarker(hue)));
-
-                if (m != null) {
-                    m.setTag(new IncidentData(title, desc, urgency, bmp, imgPath));
-                }
-
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
+                });
     }
 
+    // --- BORRAR COMUNIDAD ---
+    private void confirmDeleteCommunity() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("¿Eliminar Comunidad?")
+                .setMessage("Se borrará para siempre. ¿Estás seguro?")
+                .setPositiveButton("Eliminar", (dialog, which) -> {
+                    if (commId != null) {
+                        db.collection("comunidades").document(commId)
+                                .delete()
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(getContext(), "Comunidad borrada 🗑️", Toast.LENGTH_SHORT).show();
+                                    // Volver atrás (cerrar mapa y volver a lista)
+                                    if (getActivity() != null) {
+                                        getActivity().getSupportFragmentManager().popBackStack();
+                                    }
+                                })
+                                .addOnFailureListener(e -> Toast.makeText(getContext(), "Error al borrar", Toast.LENGTH_SHORT).show());
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    // --- CREAR INCIDENCIA (Tu código original) ---
     private void showIncidentDialog() {
         if (creationDialog == null) {
             creationDialog = new Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
@@ -246,7 +272,7 @@ public class CommunityMapFragment extends Fragment {
             btnPickOnMap.setOnClickListener(v -> {
                 isPickingLocation = true;
                 creationDialog.hide();
-                Toast.makeText(getContext(), "Toca el lugar exacto en el mapa", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Toca el mapa donde está la incidencia", Toast.LENGTH_LONG).show();
             });
         }
 
@@ -256,7 +282,6 @@ public class CommunityMapFragment extends Fragment {
 
         Button btnPublish = creationDialog.findViewById(R.id.btnPublishInc);
 
-        // --- LÓGICA DE PUBLICAR CON HILOS ---
         btnPublish.setOnClickListener(v -> {
             EditText etTitle = creationDialog.findViewById(R.id.etIncTitle);
             EditText etDesc = creationDialog.findViewById(R.id.etIncDesc);
@@ -264,81 +289,38 @@ public class CommunityMapFragment extends Fragment {
             String desc = etDesc.getText().toString();
 
             if(title.isEmpty()) { etTitle.setError("Requerido"); return; }
+            if(selectedLocation == null) { Toast.makeText(getContext(), "Elige ubicación en mapa", Toast.LENGTH_SHORT).show(); return; }
 
-            // Si hay foto, guardar en segundo plano (PSP)
-            if (selectedBitmap != null) {
-                Toast.makeText(getContext(), "Procesando imagen...", Toast.LENGTH_SHORT).show();
-                saveImageAndPublish(selectedBitmap, title, desc);
-            } else {
-                // Sin foto, guardar directo
-                saveIncidentToDBAndMap(title, desc, "", selectedLocation);
-            }
+            firebaseHelper.crearIncidencia(title, desc, selectedLocation.latitude, selectedLocation.longitude, selectedUri, new FirebaseHelper.DataStatus() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getContext(), "Incidencia Publicada", Toast.LENGTH_SHORT).show();
+                    loadIncidentsFromFirebase();
+                    creationDialog.dismiss();
+                    creationDialog = null;
+                }
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_LONG).show();
+                }
+            });
         });
 
         creationDialog.findViewById(R.id.btnClose).setOnClickListener(v -> creationDialog.dismiss());
         creationDialog.findViewById(R.id.btnCancelInc).setOnClickListener(v -> creationDialog.dismiss());
-
         updateCoordinatesText(creationDialog);
         creationDialog.show();
     }
 
-    // --- HILO EN SEGUNDO PLANO PARA GUARDAR FOTO ---
-    private void saveImageAndPublish(Bitmap bitmap, String title, String desc) {
-        executorService.execute(() -> {
-            try {
-                // Operación pesada de E/S
-                File path = new File(requireContext().getFilesDir(), "incidents");
-                if (!path.exists()) path.mkdirs();
-
-                String fileName = "INC_" + System.currentTimeMillis() + ".jpg";
-                File file = new File(path, fileName);
-
-                FileOutputStream fos = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos); // Compresión
-                fos.close();
-
-                String savedPath = file.getAbsolutePath();
-
-                // Volver al hilo principal para actualizar UI y BD
-                mainHandler.post(() -> {
-                    saveIncidentToDBAndMap(title, desc, savedPath, selectedLocation);
-                });
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                mainHandler.post(() -> Toast.makeText(getContext(), "Error guardando imagen", Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void saveIncidentToDBAndMap(String title, String desc, String imgPath, LatLng loc) {
-        // 1. Guardar en SQLite
-        boolean success = db.addIncident(title, desc, selectedUrgency, loc.latitude, loc.longitude, imgPath, currentCommunityName);
-
-        if (success) {
-            // 2. Añadir al mapa visualmente
-            addMarkerToMap(title, desc, selectedUrgency, loc, imgPath);
-            creationDialog.dismiss();
-            creationDialog = null;
-            Toast.makeText(getContext(), "Incidencia publicada", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), "Error BD", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void addMarkerToMap(String title, String desc, int urgency, LatLng loc, String imgPath) {
-        if (loc == null) return;
-        float hue;
-        if (urgency == 1) hue = BitmapDescriptorFactory.HUE_GREEN;
-        else if (urgency == 2) hue = BitmapDescriptorFactory.HUE_ORANGE;
-        else hue = BitmapDescriptorFactory.HUE_RED;
-
-        Marker marker = mMap.addMarker(new MarkerOptions()
-                .position(loc)
-                .title(title)
-                .icon(BitmapDescriptorFactory.defaultMarker(hue)));
-
-        if (marker != null) marker.setTag(new IncidentData(title, desc, urgency, selectedBitmap, imgPath));
+    // --- ÚTILES (Foto y Detalles) ---
+    private Uri saveBitmapLocally(Context context, Bitmap bitmap) {
+        File file = new File(context.getExternalFilesDir(null), "INC_" + System.currentTimeMillis() + ".jpg");
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.flush(); fos.close();
+            return Uri.fromFile(file);
+        } catch (IOException e) { return null; }
     }
 
     private void updateCoordinatesText(Dialog dialog) {
@@ -351,9 +333,8 @@ public class CommunityMapFragment extends Fragment {
     }
 
     private void showPhotoOptions() {
-        String[] options = {"Hacer Foto", "Elegir de Galería"};
-        new AlertDialog.Builder(getContext())
-                .setTitle("Evidencia")
+        String[] options = {"Cámara", "Galería"};
+        new AlertDialog.Builder(getContext()).setTitle("Adjuntar foto")
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
                         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) openCamera();
@@ -376,49 +357,17 @@ public class CommunityMapFragment extends Fragment {
 
         TextView t = sheet.findViewById(R.id.tvDetailTitle);
         TextView desc = sheet.findViewById(R.id.tvDetailDesc);
-        TextView urg = sheet.findViewById(R.id.tvDetailUrgency);
         ImageView img = sheet.findViewById(R.id.imgDetailEvidence);
-        TextView tvUp = sheet.findViewById(R.id.tvVoteUpCount);
-        TextView tvDown = sheet.findViewById(R.id.tvVoteDownCount);
-        View btnUp = sheet.findViewById(R.id.btnVoteUp);
-        View btnDown = sheet.findViewById(R.id.btnVoteDown);
 
         t.setText(data.title);
         desc.setText(data.desc);
-        tvUp.setText("👍 Sí (" + data.votesUp + ")");
-        tvDown.setText("👎 No (" + data.votesDown + ")");
 
-        if (data.urgency == 1) {
-            urg.setText("URGENCIA BAJA"); urg.setBackgroundResource(R.drawable.bg_urgency_low);
-        } else if (data.urgency == 2) {
-            urg.setText("URGENCIA MEDIA"); urg.setBackgroundResource(R.drawable.bg_urgency_medium);
-        } else {
-            urg.setText("URGENCIA ALTA"); urg.setBackgroundResource(R.drawable.bg_urgency_high);
-        }
-
-        if (data.image != null) {
-            img.setImageBitmap(data.image);
-            img.setVisibility(View.VISIBLE);
-        } else {
-            // Si no hay bitmap en RAM, intentar cargar de disco
-            if (data.imagePath != null && !data.imagePath.isEmpty()) {
-                File imgFile = new File(data.imagePath);
-                if(imgFile.exists()) {
-                    img.setImageBitmap(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
-                    img.setVisibility(View.VISIBLE);
-                } else img.setVisibility(View.GONE);
-            } else img.setVisibility(View.GONE);
-        }
-
-        btnUp.setOnClickListener(v -> {
-            data.votesUp++;
-            tvUp.setText("👍 Sí (" + data.votesUp + ")");
-        });
-
-        btnDown.setOnClickListener(v -> {
-            data.votesDown++;
-            tvDown.setText("👎 No (" + data.votesDown + ")");
-        });
+        if (data.imageUriLocal != null && !data.imageUriLocal.isEmpty()) {
+            try {
+                img.setImageURI(Uri.parse(data.imageUriLocal));
+                img.setVisibility(View.VISIBLE);
+            } catch (Exception e) { img.setVisibility(View.GONE); }
+        } else { img.setVisibility(View.GONE); }
 
         sheet.findViewById(R.id.btnCloseDetail).setOnClickListener(v -> sheet.dismiss());
         sheet.show();

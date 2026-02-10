@@ -70,4 +70,11 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")      // Login
     implementation("com.google.firebase:firebase-firestore") // Base de Datos
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.firebase:firebase-firestore:24.10.0")
+// Almacenamiento (Para las FOTOS de las incidencias)
+    implementation("com.google.firebase:firebase-storage:20.3.0")
+// Autenticación (Para saber quién es quién)
+    implementation("com.google.firebase:firebase-auth:22.3.0")
+    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+
 }
