@@ -7,6 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
+
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -14,15 +16,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import com.example.cunning_proyect.BuildConfig;
+import com.example.cunning_proyect.BuildConfig;
 
 public class OpenAIService {
 
-    // ⚠️⚠️ PEGA AQUÍ LA CLAVE DEL "NUEVO PROYECTO" ⚠️⚠️
-    // ASEGÚRATE QUE NO HAYA ESPACIOS NI SOBRE NADA
-    private static final String GOOGLE_API_KEY = "AIzaSyA1y8K-PUJPlBhcFC6jqOblBmX8cGQ3gXU";
+    private static final String GOOGLE_API_KEY = BuildConfig.GEMINI_API_KEY;
 
     // Usamos v1beta, que es la casa nativa del modelo Flash.
-    private static final String URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + GOOGLE_API_KEY;
+    private static final String URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GOOGLE_API_KEY;
 
     private final OkHttpClient client;
 
@@ -41,11 +43,24 @@ public class OpenAIService {
     public void getResponse(String userMessage, AIResponseListener listener) {
         JSONObject jsonBody = new JSONObject();
         try {
-            // ESTRUCTURA GOOGLE: { "contents": [{ "parts": [{ "text": "..." }] }] }
-            String prompt = "Eres CunningBot, asistente de la app Cunning. Responde en Español, breve y con emojis. Usuario: " + userMessage;
+            // 🔥 AQUÍ ESTÁ EL SUPER PROMPT DETALLADO 🔥
+            String systemPrompt = "Eres María, la asistente virtual experta de la aplicación Cunning. " +
+                    "Cunning es una plataforma de colaboración ciudadana que permite a los vecinos reportar incidencias en tiempo real, " +
+                    "crear y gestionar comunidades privadas, chatear y visualizar un mapa interactivo con códigos de colores para urgencias. " +
+                    "La app destaca por su tecnología 'Offline-First' que permite funcionar sin conexión. " +
+                    "TUS DIRECTRICES SON: " +
+                    "1. Tono: Amable, cercano, paciente y muy resolutivo. " +
+                    "2. Formato: Respuestas breves, directas, fáciles de leer y con emojis que acompañen el texto. " +
+                    "3. Presentación: Si el usuario te saluda (ej: 'hola', 'buenas') o te pregunta quién eres, preséntate SIEMPRE primero " +
+                    "diciendo: '¡Hola! Soy María, tu asistente de Cunning...' y explícale brevemente cómo puedes ayudarle con el mapa, las incidencias o su comunidad. " +
+                    "4. Limítate a responder dudas sobre el uso de la app o asistencia general relacionada con seguridad vecinal y convivencia. " +
+                    "\n\nMensaje del usuario: ";
+
+            // Unimos las instrucciones de personalidad con lo que ha escrito el usuario
+            String finalPrompt = systemPrompt + userMessage;
 
             JSONObject part = new JSONObject();
-            part.put("text", prompt);
+            part.put("text", finalPrompt);
 
             JSONArray parts = new JSONArray();
             parts.put(part);

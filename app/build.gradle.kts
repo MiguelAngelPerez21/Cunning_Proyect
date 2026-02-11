@@ -1,8 +1,20 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     // Plugin de Google Services activado
     id("com.google.gms.google-services")
 }
+
+// 1. CARGAMOS EL ARCHIVO local.properties EN SECRETO
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+// Leemos la clave (si no existe, ponemos cadena vacía para que no crashee)
+val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 
 android {
     namespace = "com.example.cunning_proyect"
@@ -16,6 +28,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 2. INYECTAMOS LA CLAVE EN LA CLASE BuildConfig
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+    }
+
+    // 3. ACTIVAMOS LA GENERACIÓN DE BUILDCONFIG
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -71,10 +91,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore") // Base de Datos
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.firebase:firebase-firestore:24.10.0")
-// Almacenamiento (Para las FOTOS de las incidencias)
+    // Almacenamiento (Para las FOTOS de las incidencias)
     implementation("com.google.firebase:firebase-storage:20.3.0")
-// Autenticación (Para saber quién es quién)
+    // Autenticación (Para saber quién es quién)
     implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
-
 }
