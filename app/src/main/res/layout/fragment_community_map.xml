@@ -1,38 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#0B0E14"
+    android:orientation="vertical">
 
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnReportIncident"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="24dp"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="#2563EB"
-        app:tint="#FFFFFF" />
+        android:padding="20dp">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnDeleteCommunity"
-        android:layout_width="wrap_content"
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@id/btnBack"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDetailCommName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cargando..."
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Miembros activos en la zona"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnEditCommunity"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toStartOf="@id/btnDeleteCommunity"
+            android:layout_marginEnd="10dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_rounded_card"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:visibility="gone"
+            app:tint="#FFFFFF" />
+
+        <ImageView
+            android:id="@+id/btnDeleteCommunity"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_rounded_card"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:visibility="gone"
+            app:tint="#FF5252" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="20dp"
-        android:src="@android:drawable/ic_menu_delete"
-        android:visibility="gone"
-        app:backgroundTint="#D32F2F"
-        app:tint="#FFFFFF"
-        app:fabSize="mini"/>
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="16dp">
 
-</RelativeLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:backgroundTint="#0055FF"
+            android:gravity="center"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🗺️ Mapa Incidencias"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnTabChat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:gravity="center"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💬 Chat Grupal"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="16dp"
+            android:background="@drawable/bg_rounded_card"
+            android:elevation="4dp"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Leyenda"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="🔴 Alta"
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="🟠 Media"
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔵 Baja"
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="16dp"
+            android:background="@drawable/bg_rounded_card"
+            android:elevation="4dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚠️"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tvActiveMapCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Activas ahora"
+                android:textColor="#AAAAAA"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReportIncident"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginBottom="30dp"
+            android:text="+ Reportar Incidencia"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="#0055FF"
+            app:cornerRadius="30dp" />
+
+    </RelativeLayout>
+</LinearLayout>

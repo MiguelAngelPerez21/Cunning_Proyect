@@ -5,13 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "CunningDB.db";
-    private static final int DATABASE_VERSION = 4; // Subimos versión por los cambios
+    private static final int DATABASE_VERSION = 5; // 🔥 Subimos a versión 5
 
     // TABLA COMUNIDADES
     public static final String TABLE_COMMUNITIES = "communities";
@@ -21,12 +19,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_LAT = "latitude";
     public static final String COL_LON = "longitude";
     public static final String COL_PHOTO = "photoUri";
-    public static final String COL_SYNC = "sync_status"; // 0: Pendiente, 1: Sincronizado
+    public static final String COL_SYNC = "sync_status";
 
     // TABLA INCIDENCIAS
     public static final String TABLE_INCIDENTS = "incidents";
     public static final String COL_TITLE = "title";
-    // Usamos las mismas columnas LAT, LON, PHOTO, SYNC...
+    // 🔥 NUEVAS COLUMNAS 🔥
+    public static final String COL_COMM_ID = "comunidadId";
+    public static final String COL_URGENCY = "urgencia";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -34,7 +34,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Crear Tabla Comunidades
         String createComm = "CREATE TABLE " + TABLE_COMMUNITIES + " (" +
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_NAME + " TEXT, " +
@@ -42,10 +41,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_LAT + " REAL, " +
                 COL_LON + " REAL, " +
                 COL_PHOTO + " TEXT, " +
-                COL_SYNC + " INTEGER DEFAULT 0)"; // Por defecto 0 (No sincronizado)
+                COL_SYNC + " INTEGER DEFAULT 0)";
         db.execSQL(createComm);
 
-        // Crear Tabla Incidencias
         String createInc = "CREATE TABLE " + TABLE_INCIDENTS + " (" +
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_TITLE + " TEXT, " +
@@ -53,6 +51,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_LAT + " REAL, " +
                 COL_LON + " REAL, " +
                 COL_PHOTO + " TEXT, " +
+                COL_COMM_ID + " TEXT, " + // 🔥
+                COL_URGENCY + " INTEGER, " + // 🔥
                 COL_SYNC + " INTEGER DEFAULT 0)";
         db.execSQL(createInc);
     }
@@ -64,8 +64,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // --- MÉTODOS PARA GUARDAR (SIEMPRE LOCAL PRIMERO) ---
-
     public long addCommunity(String name, String desc, double lat, double lon, String photoUri) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -74,11 +72,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_LAT, lat);
         values.put(COL_LON, lon);
         values.put(COL_PHOTO, photoUri);
-        values.put(COL_SYNC, 0); // 0 = Pendiente de subir a Firebase
+        values.put(COL_SYNC, 0);
         return db.insert(TABLE_COMMUNITIES, null, values);
     }
 
-    public long addIncident(String title, String desc, double lat, double lon, String photoUri) {
+    // 🔥 MÉTODO ACTUALIZADO 🔥
+    public long addIncident(String title, String desc, double lat, double lon, String photoUri, String commId, int urgency) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COL_TITLE, title);
@@ -86,37 +85,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COL_LAT, lat);
         values.put(COL_LON, lon);
         values.put(COL_PHOTO, photoUri);
-        values.put(COL_SYNC, 0); // 0 = Pendiente
+        values.put(COL_COMM_ID, commId);
+        values.put(COL_URGENCY, urgency);
+        values.put(COL_SYNC, 0);
         return db.insert(TABLE_INCIDENTS, null, values);
     }
 
-    // --- MÉTODOS PARA LEER (LO QUE SE MUESTRA EN LA APP) ---
-
     public Cursor getAllCommunities() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        // Leemos TODO (Sincronizado y No Sincronizado) para que el usuario vea lo suyo al momento
-        return db.rawQuery("SELECT * FROM " + TABLE_COMMUNITIES, null);
+        return this.getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_COMMUNITIES, null);
     }
 
     public Cursor getAllIncidents() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_INCIDENTS, null);
+        return this.getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_INCIDENTS, null);
     }
 
-    // --- MÉTODOS PARA LA SINCRONIZACIÓN (SYNC) ---
-
-    // Obtener solo lo que falta por subir (Sync = 0)
     public Cursor getUnsyncedCommunities() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_COMMUNITIES + " WHERE " + COL_SYNC + " = 0", null);
+        return this.getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_COMMUNITIES + " WHERE " + COL_SYNC + " = 0", null);
     }
 
     public Cursor getUnsyncedIncidents() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_INCIDENTS + " WHERE " + COL_SYNC + " = 0", null);
+        return this.getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_INCIDENTS + " WHERE " + COL_SYNC + " = 0", null);
     }
 
-    // Marcar como subido (Sync = 1)
     public void markCommunityAsSynced(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();

@@ -45,24 +45,63 @@ public class CommunityAdapter extends RecyclerView.Adapter<CommunityAdapter.View
             holder.imgIcon.setImageResource(android.R.drawable.ic_menu_myplaces);
         }
 
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("incidencias")
+                .whereEqualTo("comunidadId", community.getId())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    int totalIncidencias = queryDocumentSnapshots.size(); // 🔥 Cuenta TODAS
+                    int activasUrgentes = 0;
+
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots) {
+                        if (doc.contains("urgencia")) {
+                            Long urgencia = doc.getLong("urgencia");
+                            if (urgencia != null && urgencia == 3) {
+                                activasUrgentes++;
+                            }
+                        }
+                    }
+
+                    if (totalIncidencias > 0) {
+                        // Muestra el total de incidencias
+                        holder.tvCommActive.setText(totalIncidencias + " incidencias en la zona");
+                        holder.tvCommActive.setTextColor(android.graphics.Color.parseColor("#AAAAAA")); // Gris clarito
+
+                        if (activasUrgentes > 0) {
+                            holder.tvCommBadge.setText(activasUrgentes + " 🔥");
+                            holder.tvCommBadge.setVisibility(View.VISIBLE);
+                        } else {
+                            holder.tvCommBadge.setVisibility(View.GONE);
+                        }
+                    } else {
+                        holder.tvCommActive.setText("✅ Sin incidencias");
+                        holder.tvCommActive.setTextColor(android.graphics.Color.parseColor("#00C853")); // Verde
+                        holder.tvCommBadge.setVisibility(View.GONE);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    holder.tvCommActive.setText("⚠️ Error datos");
+                    holder.tvCommBadge.setVisibility(View.GONE);
+                });
+
         // 🔥 AL HACER CLIC: ABRIMOS EL MAPA DIRECTAMENTE 🔥
         holder.itemView.setOnClickListener(v -> {
             // 1. Preparamos los datos para el mapa
             CommunityMapFragment mapFragment = new CommunityMapFragment();
             Bundle args = new Bundle();
-            args.putString("COMM_ID", community.getId());       // ID para borrar
-            args.putString("COMM_CREATOR", community.getCreadorId()); // Creador para permiso
+            args.putString("COMM_ID", community.getId());
+            args.putString("COMM_CREATOR", community.getCreadorId());
             args.putString("COMM_NAME", community.getNombre());
             args.putDouble("COMM_LAT", community.getLatitud());
             args.putDouble("COMM_LON", community.getLongitud());
             mapFragment.setArguments(args);
 
             // 2. Cambiamos la pantalla al Fragmento del Mapa
-            if (context instanceof AppCompatActivity) {
-                AppCompatActivity activity = (AppCompatActivity) context;
+            if (context instanceof androidx.appcompat.app.AppCompatActivity) {
+                androidx.appcompat.app.AppCompatActivity activity = (androidx.appcompat.app.AppCompatActivity) context;
                 activity.getSupportFragmentManager().beginTransaction()
-                        .replace(android.R.id.content, mapFragment) // 'fragment_container' es el ID común del hueco principal
-                        .addToBackStack(null) // Para poder volver atrás
+                        .replace(android.R.id.content, mapFragment)
+                        .addToBackStack(null)
                         .commit();
             }
         });
@@ -72,7 +111,7 @@ public class CommunityAdapter extends RecyclerView.Adapter<CommunityAdapter.View
     public int getItemCount() { return list.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvDesc;
+        TextView tvName, tvDesc, tvCommActive, tvCommBadge;
         ImageView imgIcon;
 
         public ViewHolder(@NonNull View itemView) {
@@ -80,6 +119,9 @@ public class CommunityAdapter extends RecyclerView.Adapter<CommunityAdapter.View
             tvName = itemView.findViewById(R.id.tvCommName);
             tvDesc = itemView.findViewById(R.id.tvCommDesc);
             imgIcon = itemView.findViewById(R.id.imgCommIcon);
+            // 🔥 Nuevos campos para las estadísticas dinámicas
+            tvCommActive = itemView.findViewById(R.id.tvCommActive);
+            tvCommBadge = itemView.findViewById(R.id.tvCommBadge);
         }
     }
 }

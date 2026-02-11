@@ -1,46 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
+    android:background="#0B0E14"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <ImageView
+            android:id="@+id/btnBackFromChat"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@id/btnBackFromChat"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvChatCommName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre Comunidad"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Miembros activos en la zona"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:id="@+id/btnTabMap"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:gravity="center"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🗺️ Mapa Incidencias"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:backgroundTint="#0055FF"
+            android:gravity="center"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💬 Chat Grupal"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="10dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/bg_circle_green"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mensajes en directo"
+            android:textColor="#888888"
+            android:textSize="12sp" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChat"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/layoutSend"
-        android:padding="16dp"
-        android:clipToPadding="false" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="10dp" />
 
     <LinearLayout
-        android:id="@+id/layoutSend"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:background="#1A1F2B"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="@color/card_dark">
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_rounded_input"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_gallery"
+            app:tint="#888888" />
 
         <EditText
-            android:id="@+id/etChatMessage"
+            android:id="@+id/etMessageInput"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="45dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_input"
+            android:background="@drawable/bg_rounded_input"
             android:hint="Escribe un mensaje..."
-            android:textColorHint="#666666"
-            android:textColor="@android:color/white"
-            android:padding="12dp"
-            android:maxLines="3" />
+            android:paddingHorizontal="15dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:textSize="14sp" />
 
-        <ImageButton
-            android:id="@+id/btnSendChat"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_circle_blue"
-            android:src="@android:drawable/ic_menu_send"
-            app:tint="@android:color/white" />
+        <LinearLayout
+            android:id="@+id/btnSendMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_button_blue"
+            android:gravity="center"
+            android:paddingHorizontal="20dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@android:drawable/ic_menu_send"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enviar"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+        </LinearLayout>
+
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

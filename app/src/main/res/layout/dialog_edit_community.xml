@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_rounded_card"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Editar Comunidad"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etEditCommName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_rounded_input"
+        android:hint="Nuevo nombre"
+        android:paddingHorizontal="16dp"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888" />
+
+    <EditText
+        android:id="@+id/etEditCommDesc"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_rounded_input"
+        android:gravity="top"
+        android:hint="Nueva descripción"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#888888" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCancelEdit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="#333333"
+            android:text="Cancelar"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSaveEdit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#0055FF"
+            android:text="Guardar"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>

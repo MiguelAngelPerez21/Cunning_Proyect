@@ -37,9 +37,9 @@ public class SupportFragment extends Fragment {
         // 2. INICIALIZAMOS EL SERVICIO
         aiService = new OpenAIService();
 
-        rvChat = view.findViewById(R.id.rvChat);
-        etMessage = view.findViewById(R.id.etChatMessage);
-        ImageView btnSend = view.findViewById(R.id.btnSendChat);
+        rvChat = view.findViewById(R.id.rvSupportChat);
+        etMessage = view.findViewById(R.id.etSupportMessage);
+        View btnSend = view.findViewById(R.id.btnSendSupport);
 
         adapter = new ChatAdapter(messages);
         rvChat.setLayoutManager(new LinearLayoutManager(getContext()));

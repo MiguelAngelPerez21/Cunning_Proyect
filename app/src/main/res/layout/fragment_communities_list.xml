@@ -1,49 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#0B0E14"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/header"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="20dp"
-        android:gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent">
+        android:padding="20dp">
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Mis Comunidades"
+            android:id="@+id/imgAvatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_circle_blue"
+            android:gravity="center"
+            android:text="PB"
             android:textColor="#FFFFFF"
-            android:textSize="24sp"
-            android:textStyle="bold"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/btnFloatingAdd"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:cardCornerRadius="12dp"
-            app:cardBackgroundColor="#2563EB">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="15dp"
+            android:layout_toEndOf="@id/imgAvatar"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hola, Usuario"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+"
-                android:textColor="#FFF"
-                android:textSize="24sp"
-                android:layout_gravity="center"/>
-        </androidx.cardview.widget.CardView>
+                android:text="Bienvenido de nuevo"
+                android:textColor="#888888"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📈 Reportes"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvStatReports"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚠️ Activas"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvStatActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_rounded_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👥 Grupos"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvStatGroups"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Mis Comunidades"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnFloatingAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_input_add"
+            app:backgroundTint="#0055FF"
+            app:fabSize="mini"
+            app:tint="#FFFFFF" />
+    </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCommunities"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="80dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

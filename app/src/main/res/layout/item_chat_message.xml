@@ -2,39 +2,65 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="16dp"
+    android:orientation="horizontal">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/imgChatAvatar"
+    <TextView
+        android:id="@+id/tvChatAvatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@android:drawable/ic_menu_myplaces"
-        android:layout_marginEnd="12dp"/>
+        android:background="@drawable/bg_circle_blue"
+        android:gravity="center"
+        android:text="US"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/bg_input"
-        android:padding="12dp">
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvChatUser"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Usuario"
-            android:textStyle="bold"
-            android:textColor="@color/accent_blue"
-            android:textSize="12sp"/>
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvChatMessage"
+            <TextView
+                android:id="@+id/tvChatSenderName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Usuario Nombre"
+                android:textColor="#CCCCCC"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvChatTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="10:30"
+                android:textColor="#666666"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mensaje de ejemplo..."
-            android:textColor="@android:color/white"
-            android:layout_marginTop="4dp"/>
+            android:background="@drawable/bg_rounded_card"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:id="@+id/tvChatMessageText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Texto del mensaje aquí..."
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

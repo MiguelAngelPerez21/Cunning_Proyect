@@ -22,6 +22,7 @@ public class SyncService {
     // Comprueba si hay internet
     public boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnected();
     }
@@ -39,7 +40,7 @@ public class SyncService {
 
     private void syncCommunities() {
         Cursor cursor = dbHelper.getUnsyncedCommunities();
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 int id = cursor.getInt(0); // ID local
                 String nombre = cursor.getString(1);
@@ -63,13 +64,13 @@ public class SyncService {
                     }
                 });
             } while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
     }
 
     private void syncIncidents() {
         Cursor cursor = dbHelper.getUnsyncedIncidents();
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 int id = cursor.getInt(0);
                 String titulo = cursor.getString(1);
@@ -79,7 +80,20 @@ public class SyncService {
                 String fotoStr = cursor.getString(5);
                 Uri fotoUri = (fotoStr != null && !fotoStr.isEmpty()) ? Uri.parse(fotoStr) : null;
 
-                firebaseHelper.crearIncidencia(titulo, desc, lat, lon, fotoUri, new FirebaseHelper.DataStatus() {
+                // 🔥 VARIABLES NUEVAS QUE FALTABAN 🔥
+                String commId = "";
+                int urgencia = 2; // Por defecto Media
+
+                // Intentamos cogerlas de la base de datos local (asumiendo que están en las columnas 6 y 7)
+                try {
+                    if (cursor.getColumnCount() > 6) commId = cursor.getString(6);
+                    if (cursor.getColumnCount() > 7) urgencia = cursor.getInt(7);
+                } catch (Exception e) {
+                    // Si tu SQLite aún no tiene estas columnas, evitamos que crashee
+                }
+
+                // 🔥 LLAMADA ACTUALIZADA CON LOS 8 PARÁMETROS 🔥
+                firebaseHelper.crearIncidencia(titulo, desc, lat, lon, fotoUri, commId, urgencia, new FirebaseHelper.DataStatus() {
                     @Override
                     public void onSuccess() {
                         dbHelper.markIncidentAsSynced(id);
@@ -90,7 +104,7 @@ public class SyncService {
                     }
                 });
             } while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
     }
 }
