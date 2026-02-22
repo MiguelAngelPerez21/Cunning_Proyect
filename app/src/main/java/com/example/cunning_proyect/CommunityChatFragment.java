@@ -1,5 +1,6 @@
 package com.example.cunning_proyect;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,15 +10,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -40,10 +38,10 @@ public class CommunityChatFragment extends Fragment {
     private BufferedWriter writer;
     private BufferedReader reader;
 
-    private final String SERVER_IP = "10.0.2.2"; // Emulador ve la PC
+    private final String SERVER_IP = "10.0.2.2";
     private final int SERVER_PORT = 12345;
 
-    private String username = "UsuarioAndroid"; // valor por defecto
+    private String username; // ahora se obtiene desde SharedPreferences
 
     private Handler uiHandler = new Handler(Looper.getMainLooper());
 
@@ -86,44 +84,28 @@ public class CommunityChatFragment extends Fragment {
         btnSend.setOnClickListener(v -> {
             String messageText = etMessage.getText().toString().trim();
             if (!messageText.isEmpty()) {
-                sendMessageToServer(messageText); // Enviar al servidor
+                sendMessageToServer(messageText);
                 etMessage.setText("");
             }
         });
 
-        // Inicializar username desde Firebase y conectar al servidor
-        initUsernameFromFirebase();
+        // 👇 NUEVO: obtener username desde SharedPreferences
+        initUsernameFromLocalStorage();
     }
 
     // ------------------------
-    // OBTENER NOMBRE DE USUARIO DESDE FIREBASE
+    // OBTENER USERNAME DESDE SHARED PREFERENCES
     // ------------------------
-    private void initUsernameFromFirebase() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            // Opción 1: usar DisplayName de FirebaseAuth
-            username = currentUser.getDisplayName();
+    private void initUsernameFromLocalStorage() {
 
-            // Opción 2: usar Firestore si guardas nombre personalizado
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("users").document(currentUser.getUid()).get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists()) {
-                            String nameFromFirestore = document.getString("username");
-                            if (nameFromFirestore != null && !nameFromFirestore.isEmpty()) {
-                                username = nameFromFirestore;
-                            }
-                        }
-                        connectToServer();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "No se pudo obtener username de Firestore", e);
-                        connectToServer(); // conectar incluso si falla
-                    });
-        } else {
-            // Usuario no logueado, conectar con valor por defecto
-            connectToServer();
-        }
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("UserPrefs", getContext().MODE_PRIVATE);
+
+        username = prefs.getString("username", "Usuario");
+
+        Log.d(TAG, "Username cargado: " + username);
+
+        connectToServer();
     }
 
     // ------------------------
@@ -142,37 +124,57 @@ public class CommunityChatFragment extends Fragment {
                 listenForMessages();
 
             } catch (Exception e) {
-                Log.e(TAG, "ERROR al conectar con el servidor. ¿Está el host activo?");
+                Log.e(TAG, "ERROR al conectar con el servidor");
                 e.printStackTrace();
             }
         }).start();
     }
 
     // ------------------------
-    // ESCUCHAR MENSAJES DE TODOS LOS CLIENTES
+    // ESCUCHAR MENSAJES
     // ------------------------
     private void listenForMessages() {
         new Thread(() -> {
             try {
                 String message;
                 while ((message = reader.readLine()) != null) {
-                    Log.d(TAG, "Mensaje recibido: " + message);
 
-                    String sender = "Otro";
+                    String sender = "";
                     String content = message;
 
                     if (message.contains(": ")) {
                         String[] parts = message.split(": ", 2);
-                        sender = parts[0];
-                        content = parts[1];
+                        sender = parts[0].trim();
+                        content = parts[1].trim();
                     }
 
                     String finalSender = sender;
                     String finalContent = content;
 
                     uiHandler.post(() -> {
-                        // isUser = true si el remitente es el cliente actual
-                        chatMessages.add(new ChatMessage(finalSender, finalContent, finalSender.equals(username)));
+
+                        // 🔥 IGNORAR si el mensaje es mío
+                        if (finalSender.equals(username)) {
+                            return;
+                        }
+
+                        // 🔹 Mensaje normal
+                        if (!finalSender.isEmpty()) {
+                            chatMessages.add(new ChatMessage(
+                                    finalSender,
+                                    finalContent,
+                                    false
+                            ));
+                        }
+                        // 🔹 Mensaje del sistema (entra/sale)
+                        else {
+                            chatMessages.add(new ChatMessage(
+                                    "Sistema",
+                                    finalContent,
+                                    false
+                            ));
+                        }
+
                         chatAdapter.notifyItemInserted(chatMessages.size() - 1);
                         rvChat.scrollToPosition(chatMessages.size() - 1);
                     });
@@ -185,17 +187,23 @@ public class CommunityChatFragment extends Fragment {
     }
 
     // ------------------------
-    // ENVIAR MENSAJE AL SERVIDOR
+    // ENVIAR MENSAJE
     // ------------------------
     private void sendMessageToServer(String message) {
+
+        // Mostrar propio mensaje
+        uiHandler.post(() -> {
+            chatMessages.add(new ChatMessage(username, message, true));
+            chatAdapter.notifyItemInserted(chatMessages.size() - 1);
+            rvChat.scrollToPosition(chatMessages.size() - 1);
+        });
+
         new Thread(() -> {
             try {
-                Log.d(TAG, "Enviando mensaje: " + message);
-                writer.write(username + ": " + message); // enviamos nombre + contenido
+                writer.write(username + ": " + message);
                 writer.newLine();
                 writer.flush();
             } catch (Exception e) {
-                Log.e(TAG, "Error al enviar mensaje");
                 e.printStackTrace();
             }
         }).start();
