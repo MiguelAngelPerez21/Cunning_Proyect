@@ -51,8 +51,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_LAT + " REAL, " +
                 COL_LON + " REAL, " +
                 COL_PHOTO + " TEXT, " +
-                COL_COMM_ID + " TEXT, " + // 🔥
-                COL_URGENCY + " INTEGER, " + // 🔥
+                COL_COMM_ID + " TEXT, " +
+                COL_URGENCY + " INTEGER, " +
                 COL_SYNC + " INTEGER DEFAULT 0)";
         db.execSQL(createInc);
     }

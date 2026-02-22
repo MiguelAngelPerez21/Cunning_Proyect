@@ -49,7 +49,7 @@ public class SupportFragment extends Fragment {
         rvChat.setAdapter(adapter);
 
         // Mensaje de bienvenida del bot
-        addBotMessage("¡Hola! Soy CunningBot 🤖. ¿En qué te puedo ayudar hoy?");
+        addBotMessage("¡Hola! Soy Maria tu asistente virtual de Cunning. Soy una IA 🤖. ¿En qué te puedo ayudar hoy?");
 
         btnSend.setOnClickListener(v -> {
             String text = etMessage.getText().toString().trim();
