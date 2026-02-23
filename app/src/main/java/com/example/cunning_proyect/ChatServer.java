@@ -5,100 +5,67 @@ import java.net.*;
 import java.util.*;
 
 public class ChatServer {
-
     private static final int PORT = 12345;
-
-    // Ahora guardamos ClientHandler en vez de PrintWriter
-    private static List<ClientHandler> clients =
-            Collections.synchronizedList(new ArrayList<>());
+    private static Set<ClientHandler> clients = Collections.synchronizedSet(new HashSet<>());
 
     public static void main(String[] args) throws IOException {
-
-        ServerSocket serverSocket = new ServerSocket(PORT);
-        System.out.println("Servidor activo en el puerto " + PORT);
+        ServerSocket server = new ServerSocket(PORT);
+        System.out.println("Servidor iniciado en puerto " + PORT);
 
         while (true) {
-
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("Cliente conectado: " + clientSocket.getInetAddress());
-
-            ClientHandler clientHandler = new ClientHandler(clientSocket);
-            clients.add(clientHandler);
-
-            new Thread(clientHandler).start();
+            Socket socket = server.accept();
+            System.out.println("Cliente conectado: " + socket);
+            ClientHandler handler = new ClientHandler(socket);
+            clients.add(handler);
+            new Thread(handler).start();
         }
     }
 
-    static class ClientHandler implements Runnable {
-
-        private Socket socket;
-        private PrintWriter writer;
-        private BufferedReader reader;
-
-        public ClientHandler(Socket socket) {
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-
-            try {
-                reader = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()));
-
-                writer = new PrintWriter(
-                        socket.getOutputStream(), true);
-
-                // 🔵 Notificar que alguien entra
-                broadcast("🔵 Un usuario se ha unido al chat", this);
-
-                String message;
-
-                while ((message = reader.readLine()) != null) {
-
-                    System.out.println("Mensaje recibido: " + message);
-
-                    // 🔥 Reenviar a todos MENOS al que lo envió
-                    broadcast(message, this);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-
+    // Reenviar mensaje a todos los clientes conectados (excepto al remitente opcional)
+    static void broadcast(String message, ClientHandler sender) {
+        synchronized (clients) {
+            for (ClientHandler client : clients) {
                 try {
-                    clients.remove(this);
-
-                    // 🔴 Notificar salida
-                    broadcast("🔴 Un usuario ha salido del chat", this);
-
-                    socket.close();
-                    System.out.println("Cliente desconectado");
-
+                    if (client != sender) { // opcional: no reenviar al mismo cliente
+                        client.dos.writeUTF(message);
+                        client.dos.flush();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
+    }
 
-        // 🔥 Broadcast correcto
-        private void broadcast(String message, ClientHandler sender) {
+    static class ClientHandler implements Runnable {
+        private Socket socket;
+        private DataOutputStream dos;
+        private DataInputStream dis;
 
-            synchronized (clients) {
-
-                for (ClientHandler client : clients) {
-
-                    // NO reenviar al mismo cliente
-                    if (client != sender) {
-                        client.sendMessage(message);
-                    }
-                }
-            }
+        public ClientHandler(Socket socket) throws IOException {
+            this.socket = socket;
+            this.dos = new DataOutputStream(socket.getOutputStream());
+            this.dis = new DataInputStream(socket.getInputStream());
         }
 
-        public void sendMessage(String message) {
-            writer.println(message);
-            writer.flush();
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    String message = dis.readUTF(); // leer mensaje enviado por cliente
+                    System.out.println("Recibido: " + message);
+                    broadcast(message, this); // reenviar a los demás
+                }
+            } catch (IOException e) {
+                System.out.println("Cliente desconectado: " + socket);
+            } finally {
+                try {
+                    clients.remove(this);
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
