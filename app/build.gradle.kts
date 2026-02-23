@@ -14,7 +14,7 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 // Leemos la clave (si no existe, ponemos cadena vacía para que no crashee)
-val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+val geminiApiKey = localProperties.getProperty("geminiApiKey") ?: ""
 
 android {
     namespace = "com.example.cunning_proyect"
@@ -60,6 +60,7 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.activity:activity-ktx:1.9.0") // Esta es la que daba error, la bajamos a la estable
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation(libs.firebase.firestore)
 
     // Testing
     testImplementation(libs.junit)

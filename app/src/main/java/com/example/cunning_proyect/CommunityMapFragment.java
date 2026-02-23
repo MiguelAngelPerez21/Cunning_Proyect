@@ -84,6 +84,7 @@ public class CommunityMapFragment extends Fragment {
             }
     );
 
+
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -92,7 +93,17 @@ public class CommunityMapFragment extends Fragment {
                     if (extras != null) {
                         Bitmap bmp = (Bitmap) extras.get("data");
                         if(imgEvidencePreview != null) imgEvidencePreview.setImageBitmap(bmp);
-                        selectedUri = saveBitmapLocally(requireContext(), bmp);
+
+                        // Creamos un hilo paralelo para que comprimir y guardar la foto no congele la UI
+                        new Thread(() -> {
+                            Uri savedUri = saveBitmapLocally(requireContext(), bmp);
+                            // Volvemos al hilo principal para actualizar la variable
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    selectedUri = savedUri;
+                                });
+                            }
+                        }).start();
                     }
                 }
             }
@@ -279,11 +290,16 @@ public class CommunityMapFragment extends Fragment {
         btnMid.performClick();
 
         imgEvidencePreview = creationDialog.findViewById(R.id.imgEvidencePreview);
+
+        // Botón para seleccionar ubicación o abrir cámara (si tienes el botón de foto aquí)
         creationDialog.findViewById(R.id.btnPickOnMap).setOnClickListener(v -> {
             isPickingLocation = true;
             creationDialog.hide();
             Toast.makeText(getContext(), "Toca el mapa", Toast.LENGTH_SHORT).show();
         });
+
+        // (Opcional) Si en tu diseño tienes un botón explícito para la foto, llámalo así:
+        // creationDialog.findViewById(R.id.btnTakePhoto).setOnClickListener(v -> openCamera());
 
         creationDialog.findViewById(R.id.btnPublishInc).setOnClickListener(v -> {
             EditText etTitle = creationDialog.findViewById(R.id.etIncTitle);
